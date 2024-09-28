@@ -1,17 +1,20 @@
 /* Stylesheet by Shannon Horwitz, 2024 */
 
-/* Map of GeoJSON data from MegaCities.geojson */
-//declare map var in global scope
+// Create global map variable
 var map;
-//function to instantiate the Leaflet map
+
+// Create global minimum value variable
+var minValue;
+
+// Create function to generate the map
 function createMap(){
-    //create the map
+    // Create the map
     map = L.map('map', {
         center: [37.5, -79.4],
         zoom: 8
     });
 
-    //add base tilelayer
+    // Add basetile layer to the map
     L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
         minZoom: 0,
         maxZoom: 20,
@@ -19,24 +22,81 @@ function createMap(){
         ext: 'png'
     }).addTo(map);
 
-    //call getData function
+    // Call the getData function to import GeoJSON data to the map
     getData();
 
 };
 
-function onEachFeature(feature, layer) {
-    //no property named popupContent; instead, create html string with all properties
-    var popupContent = "Virginia Median Income (2013 - 2022)";
-    if (feature.properties) {
-        //loop to add feature property names and values to html string
-        for (var property in feature.properties){
-            popupContent += "<p>" + property + ": " + feature.properties[property] + "</p>";
+function calculateMinValue(data){
+    // Create empty array to store all data values
+    var allValues = [];
+    // Loop through each County
+    for(var inc of data.features){
+        // Loop through each year
+        for(var year = 2013; year <= 2022; year+=1){
+              // Get income value for current year
+              var value = inc.properties["Inc_"+ String(year)];
+            //   console.log(value)
+              // Add value to array
+              allValues.push(Number(value));
         }
-        layer.bindPopup(popupContent);
-    };
+    }
+    // Get minimum value of array excluding header
+    var minValue = Math.min(allValues.shift())
+    console.log(minValue)
+    return minValue;
+}
+
+//calculate the radius of each proportional symbol
+function calcPropRadius(attValue) {
+    //constant factor adjusts symbol sizes evenly
+    var minRadius = 7;
+    //Flannery Apperance Compensation formula
+    var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius;
+return radius;
 };
 
-//function to retrieve the data and place it on the map
+// Add circle markers for point features to the map
+function createPropSymbols(data){
+    var attribute = "Inc_2013";
+
+    // Create marker options
+    var geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+    };
+
+    // Create a Leaflet GeoJSON layer and add it to the map
+    L.geoJson(data, {
+        pointToLayer: function (feature, latlng) {
+            
+            // For each feature, determine its value for the selected attribute
+            var attValue = Number(feature.properties[attribute]);
+            console.log(attValue)
+
+            // // Examine the attribute value to check that it is correct
+            // console.log(feature.properties, attValue);
+
+            // Give each feature's circle marker a radius based on its attribute value
+            geojsonMarkerOptions.radius = calcPropRadius(attValue);
+
+            //Create circle markers
+            return L.circleMarker(latlng, geojsonMarkerOptions);
+
+            // Another way to create circle markers
+            // var marker = L.circleMarker(latlng, geojsonMarkerOptions);
+            // marker.setRadius(calcPropRadius(attValue));
+            // return marker;
+        }
+    }).addTo(map);
+};
+
+
+// Create function to retrieve the data and place it on the map
 function getData(){
     //load the data
     fetch("data/MedianIncomeVA.geojson")
@@ -44,12 +104,11 @@ function getData(){
             return response.json();
         })
         .then(function(json){
-            //create a Leaflet GeoJSON layer and add it to the map
-            L.geoJson(json, {
-                onEachFeature: onEachFeature
-            }).addTo(map);
-        })  
+            // Calculate minimum data value
+            minValue = calculateMinValue(json)
+            // Call funtion to create proportional symbols
+            createPropSymbols(json);
+        })
 };
-
 
 document.addEventListener('DOMContentLoaded',createMap)
