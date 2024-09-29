@@ -1,2 +1,6 @@
 /* Stylesheet by Shannon Horwitz, 2024 */
 #map { height: 1000px; }
+
+.leaflet-popup-content p {
+    margin: 0em 0 !important;
+}

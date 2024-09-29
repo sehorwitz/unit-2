@@ -43,7 +43,7 @@ function calculateMinValue(data){
     }
     // Get minimum value of array excluding header
     var minValue = Math.min(allValues.shift())
-    console.log(minValue)
+    // console.log(minValue)
     return minValue;
 }
 
@@ -56,13 +56,66 @@ function calcPropRadius(attValue) {
 return radius;
 };
 
-// Add circle markers for point features to the map
-function createPropSymbols(data){
+
+
+// // Add circle markers for point features to the map
+// function createPropSymbols(data){
+//     var attribute = "Inc_2013";
+
+//     // Create marker options
+//     var geojsonMarkerOptions = {
+//         radius: 8,
+//         fillColor: "#ff7800",
+//         color: "#000",
+//         weight: 1,
+//         opacity: 1,
+//         fillOpacity: 0.8
+//     };
+
+//     // Create a Leaflet GeoJSON layer and add it to the map
+//     L.geoJson(data, {
+//         pointToLayer: function (feature, latlng) {
+            
+//             // For each feature, determine its value for the selected attribute
+//             var attValue = Number(feature.properties[attribute]);
+//             console.log(attValue)
+
+//             // Examine the attribute value to check that it is correct
+//             console.log(feature.properties, attValue);
+
+//             // Give each feature's circle marker a radius based on its attribute value
+//             geojsonMarkerOptions.radius = calcPropRadius(attValue);
+
+//             //Create circle markers
+//             return L.circleMarker(latlng, geojsonMarkerOptions);
+
+//         }
+//     }).addTo(map);
+// };
+
+// // Create function to retrieve the data and place it on the map
+// function getData(){
+//     //load the data
+//     fetch("data/MedianIncomeVA.geojson")
+//         .then(function(response){
+//             return response.json();
+//         })
+//         .then(function(json){
+//             // Calculate minimum data value
+//             minValue = calculateMinValue(json)
+//             // Call funtion to create proportional symbols
+//             createPropSymbols(json);
+//         })
+// };
+
+// document.addEventListener('DOMContentLoaded',createMap)
+
+function pointToLayer(feature, latlng){
+    //Determine which attribute to visualize with proportional symbols
     var attribute = "Inc_2013";
 
-    // Create marker options
-    var geojsonMarkerOptions = {
-        radius: 8,
+    //create marker options
+    var options = {
         fillColor: "#ff7800",
         color: "#000",
         weight: 1,
@@ -70,33 +123,39 @@ function createPropSymbols(data){
         fillOpacity: 0.8
     };
 
-    // Create a Leaflet GeoJSON layer and add it to the map
+    //For each feature, determine its value for the selected attribute
+    var attValue = Number(feature.properties[attribute]);
+
+    //Give each feature's circle marker a radius based on its attribute value
+    options.radius = calcPropRadius(attValue);
+
+    //create circle marker layer
+    var layer = L.circleMarker(latlng, options);
+
+    //build popup content string
+    var popupContent = "<p><b>County/Independent City:</b> " + feature.properties.County + "</p><p><b>Median Income in " + attribute.slice(-4) + ": $</b>" + feature.properties[attribute] + "</p>";
+
+    //bind the popup to the circle marker
+    // layer.bindPopup(popupContent);
+    layer.bindPopup(popupContent, {
+        offset: new L.Point(0,-options.radius) 
+    });
+
+    //return the circle marker to the L.geoJson pointToLayer option
+    return layer;
+};
+
+//Add circle markers for point features to the map
+function createPropSymbols(data, attributes){
+    //create a Leaflet GeoJSON layer and add it to the map
     L.geoJson(data, {
-        pointToLayer: function (feature, latlng) {
-            
-            // For each feature, determine its value for the selected attribute
-            var attValue = Number(feature.properties[attribute]);
-            console.log(attValue)
-
-            // // Examine the attribute value to check that it is correct
-            // console.log(feature.properties, attValue);
-
-            // Give each feature's circle marker a radius based on its attribute value
-            geojsonMarkerOptions.radius = calcPropRadius(attValue);
-
-            //Create circle markers
-            return L.circleMarker(latlng, geojsonMarkerOptions);
-
-            // Another way to create circle markers
-            // var marker = L.circleMarker(latlng, geojsonMarkerOptions);
-            // marker.setRadius(calcPropRadius(attValue));
-            // return marker;
+        pointToLayer: function(feature, latlng){
+            return pointToLayer(feature, latlng, attributes);
         }
     }).addTo(map);
 };
 
-
-// Create function to retrieve the data and place it on the map
+//Step 2: Import GeoJSON data
 function getData(){
     //load the data
     fetch("data/MedianIncomeVA.geojson")
@@ -104,9 +163,9 @@ function getData(){
             return response.json();
         })
         .then(function(json){
-            // Calculate minimum data value
-            minValue = calculateMinValue(json)
-            // Call funtion to create proportional symbols
+            //calculate minimum data value
+            minValue = calculateMinValue(json);
+            //call function to create proportional symbols
             createPropSymbols(json);
         })
 };
