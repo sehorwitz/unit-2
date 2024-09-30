@@ -1,5 +1,49 @@
 /* Stylesheet by Shannon Horwitz, 2024 */
-#map { height: 1000px; }
+/* #map { height: 1000px; } */
+
+#map {    
+    height: 400px;    
+    width: 80%;
+    display: inline-block;
+    }
+
+    /* #panel {    
+        width: 16%;    
+        padding: 20px;
+        display: inline-block;
+        vertical-align: top;
+        text-align: center;
+        line-height: 42px;
+    } */
+
+    #panel {  
+        width: 18%;  
+        padding: 5px;  
+        display: inline-block;  
+        vertical-align: top;  
+        text-align: center;  
+        line-height: 42px;  
+    }  
+    
+    .range-slider {  
+        width: 40%;  
+    }  
+    
+    .step {  
+        width: 25%;  
+    }  
+    
+    .step img {  
+        width: 40%;  
+    }  
+    
+    #forward {  
+        float: right;  
+    }  
+    
+    #reverse {  
+        float: left;  
+    }
 
 .leaflet-popup-content p {
     margin: 0em 0 !important;
