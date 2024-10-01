@@ -16,6 +16,10 @@ function createMap(){
     // Create OSM base tilelayer
     L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    
+
+
+
     // Add tile layer to the map
     }).addTo(map);
 
@@ -25,36 +29,48 @@ function createMap(){
 
 // Create the calculate min value function
 function calculateMinValue(data){
+    
     // Create empty array to store all data values
     var allValues = [];
+    
     // Loop through each city
     for(var city of data.features){
+        
         // Loop through each year
         for(var year = 1985; year <= 2015; year+=5){
-              // Get population for current year
+              
+            // Get population for current year
               var value = city.properties["Pop_"+ String(year)];
+              
               // Add value to array
               allValues.push(value);
         }
     }
+    
     // Get minimum value of array
     var minValue = Math.min(...allValues)
+    
+    
     // Make min variable value available to other functions
     return minValue;
 }
 
 // Calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
+    
     // Constant factor adjusts symbol sizes evenly
     var minRadius = 5;
-    //Flannery Apperance Compensation formula
+    
+    // Flannery Apperance Compensation formula
     var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
+    
     // Make radius variable value available to other functions
     return radius;
 };
 
 // Create pointToLayer function with feature, latlng, and attributes parameters
 function pointToLayer(feature, latlng, attributes){
+    
     // Create attribute value to access first element in attributes array
     var attribute = attributes[0];
 

@@ -1,13 +1,12 @@
 /* Stylesheet by Shannon Horwitz, 2024 */
 
-// Create global map variable
+// Global variables
 var map;
-
-// Create global minimum value variable
 var minValue;
 
 // Create function to generate the map
 function createMap(){
+    
     // Create the map
     map = L.map('map', {
         center: [37.5, -79.4],
@@ -20,111 +19,75 @@ function createMap(){
         maxZoom: 20,
         attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         ext: 'png'
+    
+    // Add tile layer to map
     }).addTo(map);
 
     // Call the getData function to import GeoJSON data to the map
-    getData();
-
+    getData(map);
 };
 
+// Create the calculate min value function
 function calculateMinValue(data){
+    
     // Create empty array to store all data values
     var allValues = [];
+    
     // Loop through each County
     for(var inc of data.features){
+        
         // Loop through each year
         for(var year = 2013; year <= 2022; year+=1){
-              // Get income value for current year
+              
+            // Get income value for current year
               var value = inc.properties["Inc_"+ String(year)];
-            //   console.log(value)
+              
               // Add value to array
-              allValues.push(Number(value));
+              allValues.push(Number(value));////
+            //   allValues.push(value);
         }
     }
+    
     // Get minimum value of array excluding header
-    var minValue = Math.min(allValues.shift())
-    // console.log(minValue)
+    var minValue = Math.min(allValues.shift())////
+    // var minValue = Math.min(...allValues)////
+    
+    // Make min variable value available to other functions
     return minValue;
 }
 
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
-    //constant factor adjusts symbol sizes evenly
-    var minRadius = 7;
-    //Flannery Apperance Compensation formula
+    
+    // Constant factor adjusts symbol sizes evenly
+    var minRadius = 8;
+    
+    // Flannery Apperance Compensation formula
     var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius;
-return radius;
+    
+    // Make radius variable value available to other functions
+    return radius;
 };
 
 
+// Create pointToLayer function with feature, latlng, and attributes parameters
+function pointToLayer(feature, latlng, attributes){
 
-// // Add circle markers for point features to the map
-// function createPropSymbols(data){
-//     var attribute = "Inc_2013";
-
-//     // Create marker options
-//     var geojsonMarkerOptions = {
-//         radius: 8,
-//         fillColor: "#ff7800",
-//         color: "#000",
-//         weight: 1,
-//         opacity: 1,
-//         fillOpacity: 0.8
-//     };
-
-//     // Create a Leaflet GeoJSON layer and add it to the map
-//     L.geoJson(data, {
-//         pointToLayer: function (feature, latlng) {
-            
-//             // For each feature, determine its value for the selected attribute
-//             var attValue = Number(feature.properties[attribute]);
-//             console.log(attValue)
-
-//             // Examine the attribute value to check that it is correct
-//             console.log(feature.properties, attValue);
-
-//             // Give each feature's circle marker a radius based on its attribute value
-//             geojsonMarkerOptions.radius = calcPropRadius(attValue);
-
-//             //Create circle markers
-//             return L.circleMarker(latlng, geojsonMarkerOptions);
-
-//         }
-//     }).addTo(map);
-// };
-
-// // Create function to retrieve the data and place it on the map
-// function getData(){
-//     //load the data
-//     fetch("data/MedianIncomeVA.geojson")
-//         .then(function(response){
-//             return response.json();
-//         })
-//         .then(function(json){
-//             // Calculate minimum data value
-//             minValue = calculateMinValue(json)
-//             // Call funtion to create proportional symbols
-//             createPropSymbols(json);
-//         })
-// };
-
-// document.addEventListener('DOMContentLoaded',createMap)
-
-function pointToLayer(feature, latlng){
-    //Determine which attribute to visualize with proportional symbols
-    var attribute = "Inc_2013";
+    // Create attribute value to access first element in attributes array
+    var attribute = attributes[0];
 
     //create marker options
     var options = {
-        fillColor: "#ff7800",
+        fillColor: "#028A0F",
         color: "#000",
         weight: 1,
         opacity: 1,
-        fillOpacity: 0.8
+        fillOpacity: 0.9
     };
 
     //For each feature, determine its value for the selected attribute
     var attValue = Number(feature.properties[attribute]);
+    // console.log(attValue)
 
     //Give each feature's circle marker a radius based on its attribute value
     options.radius = calcPropRadius(attValue);
@@ -133,26 +96,131 @@ function pointToLayer(feature, latlng){
     var layer = L.circleMarker(latlng, options);
 
     //build popup content string
-    var popupContent = "<p><b>County/Independent City:</b> " + feature.properties.County + "</p><p><b>Median Income in " + attribute.slice(-4) + ": $</b>" + feature.properties[attribute] + "</p>";
+    var popupContent = "<p><b>County/Independent City:</b> " + feature.properties.County + "</p>";
+    
 
-    //bind the popup to the circle marker
-    // layer.bindPopup(popupContent);
+    // Add formatted attribute to popup content string
+    var year = attribute.split("_")[1];
+    
+    popupContent += "<p><b>Median Income in " + year + ": $</b>" + feature.properties[attribute] + "</p>";
+    console.log(popupContent);
+
+    // Bind the popup to the circle marker
     layer.bindPopup(popupContent, {
         offset: new L.Point(0,-options.radius) 
     });
 
-    //return the circle marker to the L.geoJson pointToLayer option
+    // Return the circle marker to the L.geoJson pointToLayer option
     return layer;
 };
 
-//Add circle markers for point features to the map
+// Create function to add circle markers for point features to the map
 function createPropSymbols(data, attributes){
-    //create a Leaflet GeoJSON layer and add it to the map
+    // Create a Leaflet GeoJSON layer and add it to the map
+    // console.log(attributes)
     L.geoJson(data, {
         pointToLayer: function(feature, latlng){
             return pointToLayer(feature, latlng, attributes);
         }
     }).addTo(map);
+};
+
+// Create function to update proportional symbols
+function updatePropSymbols(attribute){
+    console.log(attribute)
+    map.eachLayer(function(layer){
+        if (layer.feature && layer.feature.properties[attribute]){
+            if (layer.feature && layer.feature.properties[attribute]){
+                // Access feature properties
+                var props = layer.feature.properties;
+                // Update each feature's radius based on new attribute values
+                var radius = calcPropRadius(props[attribute]);
+                layer.setRadius(radius);
+    
+                // Add city to popup content string
+                var popupContent = "<p><b>County/Independent City:</b> " + props.County + "</p>";
+    
+                // Add formatted attribute to panel content string
+                var year = attribute.split("_")[1];
+                // console.log(year)
+                popupContent += "<p><b>Median Income in " + year + ": $</b>" + props[attribute] + "</p>";
+                console.log(props[attribute]);
+
+                // Update popup content            
+                popup = layer.getPopup();            
+                popup.setContent(popupContent).update();
+            };
+        };
+    });
+};
+
+// Create new sequence controls
+function createSequenceControls(attributes){
+    
+    //Create range input element (slider)
+    var slider = "<input class='range-slider' type='range'></input>";
+    document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
+    
+
+    //set slider attributes
+    document.querySelector(".range-slider").max = 9;///
+    document.querySelector(".range-slider").min = 0;
+    document.querySelector(".range-slider").value = 0;
+    document.querySelector(".range-slider").step = 1;
+    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse"></button>');
+    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward"></button>');
+    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>");
+    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>")
+    
+
+    // document.querySelectorAll('.step').forEach(function(step){
+    document.querySelectorAll('.step').forEach(function(step){
+        step.addEventListener("click", function(){
+            var index = document.querySelector('.range-slider').value;
+            console.log(index)
+            
+            // Increment or decrement depending on button clicked
+            if (step.id == 'forward'){
+                index++;
+                // If past the last attribute, wrap around to first attribute
+                index = index > 9 ? 0 : index;
+            } else if (step.id == 'reverse'){
+                index--;
+                //If past the first attribute, wrap around to last attribute
+                index = index < 0 ? 9 : index;
+            };
+            
+            // Update slider
+            document.querySelector('.range-slider').value = index;
+            updatePropSymbols(attributes[index]);
+            
+
+        })
+        
+    })
+    
+};
+
+// Create function to process data
+function processData(data){
+    
+    // Create an empty array to hold attributes
+    var attributes = [];
+
+    // Properties of the first feature in the dataset
+    var properties = data.features[0].properties;
+
+    // Push each attribute name into attributes array
+    for (var attribute in properties){
+        
+        // Only take attributes with population values
+        if (attribute.indexOf("Inc") > -1){
+            attributes.push(attribute);
+        };
+    };
+
+    // Make attributes variable available to other functions
+    return attributes;
 };
 
 //Step 2: Import GeoJSON data
@@ -163,10 +231,16 @@ function getData(){
             return response.json();
         })
         .then(function(json){
-            //calculate minimum data value
+            
+            // Create an attributes array
+            var attributes = processData(json);
+
+            // Calculate minimum data value
             minValue = calculateMinValue(json);
-            //call function to create proportional symbols
-            createPropSymbols(json);
+            
+            // Call function to create proportional symbols
+            createPropSymbols(json, attributes);
+            createSequenceControls(attributes);
         })
 };
 
