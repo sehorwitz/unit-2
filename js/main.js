@@ -54,7 +54,7 @@ function calculateMinValue(data){
     
     // Make min variable value available to other functions
     return minValue;
-}
+};
 
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
@@ -103,7 +103,6 @@ function pointToLayer(feature, latlng, attributes){
     var year = attribute.split("_")[1];
     
     popupContent += "<p><b>Median Income in " + year + ": $</b>" + feature.properties[attribute] + "</p>";
-    console.log(popupContent);
 
     // Bind the popup to the circle marker
     layer.bindPopup(popupContent, {
@@ -127,7 +126,7 @@ function createPropSymbols(data, attributes){
 
 // Create function to update proportional symbols
 function updatePropSymbols(attribute){
-    console.log(attribute)
+    // console.log(attribute)
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
             if (layer.feature && layer.feature.properties[attribute]){
@@ -144,7 +143,7 @@ function updatePropSymbols(attribute){
                 var year = attribute.split("_")[1];
                 // console.log(year)
                 popupContent += "<p><b>Median Income in " + year + ": $</b>" + props[attribute] + "</p>";
-                console.log(props[attribute]);
+                // console.log(props[attribute]);
 
                 // Update popup content            
                 popup = layer.getPopup();            
@@ -157,47 +156,72 @@ function updatePropSymbols(attribute){
 // Create new sequence controls
 function createSequenceControls(attributes){
     
-    //Create range input element (slider)
+    // Create range input element (slider)
     var slider = "<input class='range-slider' type='range'></input>";
-    document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
-    
 
-    //set slider attributes
+    // Insert the slider into the side panel
+    document.querySelector("#panel").insertAdjacentHTML('beforeend', slider);
+    
+    // Set slider attributes
     document.querySelector(".range-slider").max = 9;///
     document.querySelector(".range-slider").min = 0;
     document.querySelector(".range-slider").value = 0;
     document.querySelector(".range-slider").step = 1;
+
+    // Create buttons on the panel identifying one as reverse and one as forward
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse"></button>');
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward"></button>');
-    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>");
-    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>")
-    
 
-    // document.querySelectorAll('.step').forEach(function(step){
-    document.querySelectorAll('.step').forEach(function(step){
-        step.addEventListener("click", function(){
+    // Replace button content with images
+    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>");
+    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>");
+
+    // Create listener for range slider
+    document.querySelectorAll('.range-slider').forEach(function(){
+        
+        // Create input listener for slider
+        document.addEventListener("click", function(){
+
+            // Get the index value
             var index = document.querySelector('.range-slider').value;
-            console.log(index)
+            
+            // Call function using defined index value
+            updatePropSymbols(attributes[index]);
+        });
+    });
+
+    // Creat listener for buttons
+    document.querySelectorAll('.step').forEach(function(step){
+
+        // Create input listener for button clicks
+        step.addEventListener("click", function(){
+
+            // Get the index value of the slider
+            var index = document.querySelector('.range-slider').value;
             
             // Increment or decrement depending on button clicked
             if (step.id == 'forward'){
                 index++;
+                
                 // If past the last attribute, wrap around to first attribute
                 index = index > 9 ? 0 : index;
             } else if (step.id == 'reverse'){
                 index--;
-                //If past the first attribute, wrap around to last attribute
+                
+                // If past the first attribute, wrap around to last attribute
                 index = index < 0 ? 9 : index;
             };
             
             // Update slider
             document.querySelector('.range-slider').value = index;
+
+            // Call function using defined index value
             updatePropSymbols(attributes[index]);
             
 
-        })
+        });
         
-    })
+    });
     
 };
 
@@ -223,9 +247,10 @@ function processData(data){
     return attributes;
 };
 
-//Step 2: Import GeoJSON data
+// Import GeoJSON data
 function getData(){
-    //load the data
+    
+    // Load the data
     fetch("data/MedianIncomeVA.geojson")
         .then(function(response){
             return response.json();
@@ -240,8 +265,10 @@ function getData(){
             
             // Call function to create proportional symbols
             createPropSymbols(json, attributes);
+
+            // Call funtion to access sequence controls passing in attributes
             createSequenceControls(attributes);
-        })
+        });
 };
 
 document.addEventListener('DOMContentLoaded',createMap)

@@ -506,8 +506,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	pointer-events: none;
 	}
 .leaflet-popup-tip {
-	width: 17px;
-	height: 17px;
+	width: 15px;
+	height: 15px;
 	padding: 1px;
 
 	margin: -10px auto 0;
