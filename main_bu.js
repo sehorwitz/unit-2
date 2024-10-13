@@ -10,7 +10,7 @@ function createMap(){
     // Create the map
     map = L.map('map', {
         center: [37.5, -79.4],
-        zoom: 7
+        zoom: 8
     });
 
     // Add basetile layer to the map
@@ -69,14 +69,6 @@ function calcPropRadius(attValue) {
     return radius;
 };
 
-// Create Popup Content function
-function PopupContent(properties, attribute){
-    this.properties = properties;
-    this.attribute = attribute;
-    this.year = attribute.split("_")[1];
-    this.population = this.properties[attribute];
-    this.formatted = "<p><b>County/Independent City:</b> " + this.properties.County + "</p><p><b>Median Income in " + this.year + ":</b> $" + this.population + "</p>";
-};
 
 // Create pointToLayer function with feature, latlng, and attributes parameters
 function pointToLayer(feature, latlng, attributes){
@@ -84,7 +76,7 @@ function pointToLayer(feature, latlng, attributes){
     // Create attribute value to access first element in attributes array
     var attribute = attributes[0];
 
-    // Create marker options
+    //create marker options
     var options = {
         fillColor: "#028A0F",
         color: "#000",
@@ -93,31 +85,38 @@ function pointToLayer(feature, latlng, attributes){
         fillOpacity: 0.9
     };
 
-    // For each feature, determine its value for the selected attribute
+    //For each feature, determine its value for the selected attribute
     var attValue = Number(feature.properties[attribute]);
+    // console.log(attValue)
 
-    // Give each feature's circle marker a radius based on its attribute value
+    //Give each feature's circle marker a radius based on its attribute value
     options.radius = calcPropRadius(attValue);
 
-    // Create circle marker layer
+    //create circle marker layer
     var layer = L.circleMarker(latlng, options);
 
-    // Create Popup Content variable to access PopupContent function
-    var popupContent = new PopupContent(feature.properties, attribute);
-
-    // Bind the popup to the circle marker    
-    layer.bindPopup(popupContent.formatted, { 
-        offset: new L.Point(0,-options.radius)
-    });
+    //build popup content string
+    var popupContent = "<p><b>County/Independent City:</b> " + feature.properties.County + "</p>";
     
+
+    // Add formatted attribute to popup content string
+    var year = attribute.split("_")[1];
+    
+    popupContent += "<p><b>Median Income in " + year + ": $</b>" + feature.properties[attribute] + "</p>";
+
+    // Bind the popup to the circle marker
+    layer.bindPopup(popupContent, {
+        offset: new L.Point(0,-options.radius) 
+    });
+
     // Return the circle marker to the L.geoJson pointToLayer option
     return layer;
 };
 
 // Create function to add circle markers for point features to the map
 function createPropSymbols(data, attributes){
-    
     // Create a Leaflet GeoJSON layer and add it to the map
+    // console.log(attributes)
     L.geoJson(data, {
         pointToLayer: function(feature, latlng){
             return pointToLayer(feature, latlng, attributes);
@@ -127,23 +126,28 @@ function createPropSymbols(data, attributes){
 
 // Create function to update proportional symbols
 function updatePropSymbols(attribute){
+    // console.log(attribute)
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
             if (layer.feature && layer.feature.properties[attribute]){
-                
                 // Access feature properties
                 var props = layer.feature.properties;
-                
                 // Update each feature's radius based on new attribute values
                 var radius = calcPropRadius(props[attribute]);
                 layer.setRadius(radius);
+    
+                // Add city to popup content string
+                var popupContent = "<p><b>County/Independent City:</b> " + props.County + "</p>";
+    
+                // Add formatted attribute to panel content string
+                var year = attribute.split("_")[1];
+                // console.log(year)
+                popupContent += "<p><b>Median Income in " + year + ": $</b>" + props[attribute] + "</p>";
+                // console.log(props[attribute]);
 
-                // Create Popup Content variable to access PopupContent function
-                var popupContent = new PopupContent(props, attribute);
-
-                // Update popup with new content    
-                popup = layer.getPopup();    
-                popup.setContent(popupContent.formatted).update();
+                // Update popup content            
+                popup = layer.getPopup();            
+                popup.setContent(popupContent).update();
             };
         };
     });

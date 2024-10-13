@@ -53,7 +53,7 @@ function calculateMinValue(data){
     
     // Make min variable value available to other functions
     return minValue;
-}
+};
 
 // Calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
@@ -66,6 +66,25 @@ function calcPropRadius(attValue) {
     
     // Make radius variable value available to other functions
     return radius;
+};
+
+// function createPopupContent(properties, attribute){
+//     //add city to popup content string
+//     var popupContent = "<p><b>City:</b> " + properties.City + "</p>";
+
+//     //add formatted attribute to panel content string
+//     var year = attribute.split("_")[1];
+//     popupContent += "<p><b>Population in " + year + ":</b> " + properties[attribute] + " million</p>";
+
+//     return popupContent;
+// };
+
+function PopupContent(properties, attribute){
+    this.properties = properties;
+    this.attribute = attribute;
+    this.year = attribute.split("_")[1];
+    this.population = this.properties[attribute];
+    this.formatted = "<p><b>City:</b> " + this.properties.City + "</p><p><b>Population in " + this.year + ":</b> " + this.population + " million</p>";
 };
 
 // Create pointToLayer function with feature, latlng, and attributes parameters
@@ -92,23 +111,49 @@ function pointToLayer(feature, latlng, attributes){
     // Create circle marker layer
     var layer = L.circleMarker(latlng, options);
 
-    // Build popup content string starting with city
-    var popupContent = "<p><b>City:</b> " + feature.properties.City + "</p>";
+    // // Build popup content string starting with city
+    // var popupContent = "<p><b>City:</b> " + feature.properties.City + "</p>";
 
-    // Add formatted attribute to popup content string
-    var year = attribute.split("_")[1];
+    // // Add formatted attribute to popup content string
+    // var year = attribute.split("_")[1];
 
-    // Add popup content string starting with populations
-    popupContent += "<p><b>Population in " + year + ":</b> " + feature.properties[attribute] + " million</p>";
+    // // Add popup content string starting with populations
+    // popupContent += "<p><b>Population in " + year + ":</b> " + feature.properties[attribute] + " million</p>";
 
-    // Bind the popup to the circle marker
-    layer.bindPopup(popupContent, {
-        offset: new L.Point(0,-options.radius) 
+    // // Bind the popup to the circle marker
+    // layer.bindPopup(popupContent, {
+    //     offset: new L.Point(0,-options.radius) 
+    // });
+
+
+//     var popupContent = createPopupContent(feature.properties, attribute);
+//     //bind the popup to the circle marker    
+//     layer.bindPopup(popupContent, {offset: new L.Point(0,-options.radius)});
+
+    var popupContent = new PopupContent(feature.properties, attribute);
+
+    //change the formatting
+    popupContent.formatted = "<h2>" + popupContent.population + " million</h2>";
+
+    // //create another popup based on the first
+    // var popupContent2 = Object.create(popupContent);
+
+    // //change the formatting of popup 2
+    // popupContent2.formatted = "<h2>" + popupContent.population + " million</h2>";
+
+    // //add popup to circle marker    
+    // layer.bindPopup(popupContent2.formatted);
+
+    // console.log(popupContent.formatted); //original popup content
+
+    //bind the popup to the circle marker    
+    layer.bindPopup(popupContent.formatted, { 
+        offset: new L.Point(0,-options.radius)
     });
 
-    // Return the circle marker to the L.geoJson pointToLayer option
-    return layer;
-};
+        // Return the circle marker to the L.geoJson pointToLayer option
+        return layer;
+    };
 
 // Create function to add circle markers for point features to the map
 function createPropSymbols(data, attributes){
@@ -132,16 +177,29 @@ function updatePropSymbols(attribute){
                 var radius = calcPropRadius(props[attribute]);
                 layer.setRadius(radius);
     
-                // Add city to popup content string
-                var popupContent = "<p><b>City:</b> " + props.City + "</p>";
+                // // Add city to popup content string
+                // var popupContent = "<p><b>City:</b> " + props.City + "</p>";
     
-                // Add formatted attribute to panel content string
-                var year = attribute.split("_")[1];
-                popupContent += "<p><b>Population in " + year + ":</b> " + props[attribute] + " million</p>";
+                // // Add formatted attribute to panel content string
+                // var year = attribute.split("_")[1];
+                // popupContent += "<p><b>Population in " + year + ":</b> " + props[attribute] + " million</p>";
     
-                // Update popup content            
-                popup = layer.getPopup();            
-                popup.setContent(popupContent).update();
+                // // Update popup content            
+                // popup = layer.getPopup();            
+                // popup.setContent(popupContent).update();
+
+
+                // var popupContent = createPopupContent(props, attribute);    
+                // //update popup with new content    
+                // popup = layer.getPopup();    
+                // popup.setContent(popupContent).update();
+
+                var popupContent = new PopupContent(props, attribute);
+
+                //update popup with new content    
+                popup = layer.getPopup();    
+                popup.setContent(popupContent.formatted).update();
+
             };
         };
     });
