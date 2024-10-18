@@ -1,32 +1,73 @@
 /* Stylesheet by Shannon Horwitz, 2024 */
 
-#map {    
+/* #map {    
     height: 1000px;    
     width: 80%;
     display: inline-block;
+    } */
+
+#map {    
+    height: 700px;    
+    width: 100%;
+    display: inline-block;
+    background-color: black;
     }
 
-    #panel {  
+    /* #panel {  
         width: 18%;  
         padding: 5px;  
         display: inline-block;  
         vertical-align: top;  
         text-align: center;  
         line-height: 42px;  
-    }  
+    }   */
+
+    .sequence-control-container {  
+        width: 350px;  
+        height: 30px;  
+        background-color: rgba(233, 230, 230, 0.8);  
+        padding: 10px;  
+        line-height: 45px;  
+        text-align: center;  
+        border: solid gray 1px;  
+    } 
+
+    .legend-control-container {
+        width: 200px;  
+        height: 100px;  
+        background-color: rgba(251, 247, 247, 0.8);  
+        padding: 7px;  
+        line-height: 10px;  
+        text-align: center;
+        border: solid gray 1px;  
+    } 
     
+    /* .range-slider {  
+        width: 40%;  
+    }   */
+
     .range-slider {  
-        width: 40%;  
+        width: 250px;
+        background-color: rgba(236, 233, 233, 0.8);  
     }  
     
-    .step {  
+    /* .step {  
         width: 25%;  
-    }  
+    }   */
+
+    .step {  
+        width: 40px;  
+    } 
     
-    .step img {  
+    /* .step img {  
         width: 40%;  
+    }   */
+
+    .step img {  
+        width: 100%;
+        height: auto;  
     }  
-    
+
     #forward {  
         float: right;  
     }  
@@ -37,4 +78,10 @@
 
 .leaflet-popup-content p {
     margin: 0em 0 !important;
+}
+
+.range-slider{accent-color: rgb(17, 19, 17);}
+
+svg {
+    font-weight: bold;
 }

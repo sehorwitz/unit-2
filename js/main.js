@@ -2,33 +2,53 @@
 
 // Global variables
 var map;
-var minValue;
+var dataStats = {};
 
 // Create function to generate the map
 function createMap(){
     
     // Create the map
     map = L.map('map', {
-        center: [37.5, -79.4],
+        center: [37.6, -78.7],
         zoom: 7
     });
 
     // Add basetile layer to the map
-    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
+    var baseMap = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
         minZoom: 0,
         maxZoom: 20,
         attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         ext: 'png'
+
+    
     
     // Add tile layer to map
     }).addTo(map);
 
+    var Stadia_Outdoors = L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.{ext}', {
+        minZoom: 0,
+        maxZoom: 20,
+        attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        ext: 'png'
+    }).addTo(map);
+    
+
     // Call the getData function to import GeoJSON data to the map
     getData(map);
+
+    var baseMap = {
+        "Dark BaseMap": baseMap
+    }
+
+    var Stadia_Outdoors = {
+        "Light BaseMap": Stadia_Outdoors
+    }
+
+    var layerControl = L.control.layers(baseMap, Stadia_Outdoors).addTo(map);
 };
 
 // Create the calculate min value function
-function calculateMinValue(data){
+function calcStats(data){
     
     // Create empty array to store all data values
     var allValues = [];
@@ -44,16 +64,29 @@ function calculateMinValue(data){
               
               // Add value to array
               allValues.push(Number(value));////
-            //   allValues.push(value);
         }
     }
     
-    // Get minimum value of array excluding header
-    var minValue = Math.min(allValues.shift())////
-    // var minValue = Math.min(...allValues)////
+    // // Get minimum value of array excluding header
+    // var minValue = Math.min(allValues.shift())////
+    // // var minValue = Math.min(...allValues)////
     
-    // Make min variable value available to other functions
-    return minValue;
+    // // Make min variable value available to other functions
+    // return minValue;
+
+        //get min, max, mean stats for our array
+        dataStats.min = Math.min(...allValues);
+        // console.log(dataStats.min)
+        // dataStats.min = 39328
+        dataStats.max = Math.max(...allValues);
+        console.log(dataStats.max)
+        //calculate meanValue
+        var sum = allValues.reduce(function(a, b){return a+b;});
+        console.log(sum)
+        dataStats.mean = sum/ allValues.length;
+        console.log(dataStats.mean)
+
+        return dataStats.min
 };
 
 //calculate the radius of each proportional symbol
@@ -63,7 +96,7 @@ function calcPropRadius(attValue) {
     var minRadius = 8;
     
     // Flannery Apperance Compensation formula
-    var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius;
+    var radius = 1.0083 * Math.pow(attValue/dataStats.min,0.5715) * minRadius;
     
     // Make radius variable value available to other functions
     return radius;
@@ -74,8 +107,8 @@ function PopupContent(properties, attribute){
     this.properties = properties;
     this.attribute = attribute;
     this.year = attribute.split("_")[1];
-    this.population = this.properties[attribute];
-    this.formatted = "<p><b>County/Independent City:</b> " + this.properties.County + "</p><p><b>Median Income in " + this.year + ":</b> $" + this.population + "</p>";
+    this.income = this.properties[attribute];
+    this.formatted = "<p><b>County/Independent City:</b> " + this.properties.County + "</p><p><b>Median Income in " + this.year + ":</b> $" + this.income + "</p>";
 };
 
 // Create pointToLayer function with feature, latlng, and attributes parameters
@@ -137,6 +170,7 @@ function updatePropSymbols(attribute){
                 // Update each feature's radius based on new attribute values
                 var radius = calcPropRadius(props[attribute]);
                 layer.setRadius(radius);
+                console.log(radius)
 
                 // Create Popup Content variable to access PopupContent function
                 var popupContent = new PopupContent(props, attribute);
@@ -144,81 +178,132 @@ function updatePropSymbols(attribute){
                 // Update popup with new content    
                 popup = layer.getPopup();    
                 popup.setContent(popupContent.formatted).update();
+
+                // Set year attribute to variable
+                var year = attribute.split("_")[1];
+                // Update temporal legend
+                document.querySelector("span.year").innerHTML = year;
+
             };
         };
     });
 };
 
 // Create new sequence controls
-function createSequenceControls(attributes){
+function createSequenceControls(attributes){   
+    var SequenceControl = L.Control.extend({
+        options: {
+            position: 'bottomleft'
+        },
     
-    // Create range input element (slider)
-    var slider = "<input class='range-slider' type='range'></input>";
+        onAdd: function () {
+            // Create the control container div with a particular class name
+            var container = L.DomUtil.create('div', 'sequence-control-container');
+           
+            // Create range input element (slider)
+            container.insertAdjacentHTML('beforeend', '<input class="range-slider" type="range">')
 
-    // Insert the slider into the side panel
-    document.querySelector("#panel").insertAdjacentHTML('beforeend', slider);
+            // Add skip buttons
+            container.insertAdjacentHTML('beforeend', '<button class="step" id="reverse" title="Reverse"><img src="img/reverse.png"></button>'); 
+            container.insertAdjacentHTML('beforeend', '<button class="step" id="forward" title="Forward"><img src="img/forward.png"></button>');
     
-    // Set slider attributes
-    document.querySelector(".range-slider").max = 9;///
-    document.querySelector(".range-slider").min = 0;
-    document.querySelector(".range-slider").value = 0;
-    document.querySelector(".range-slider").step = 1;
+            // Set slider attributes
+            container.querySelector(".range-slider").max = 9;///
+            container.querySelector(".range-slider").min = 0;
+            container.querySelector(".range-slider").value = 0;
+            container.querySelector(".range-slider").step = 1;
 
-    // Create buttons on the panel identifying one as reverse and one as forward
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse"></button>');
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward"></button>');
 
-    // Replace button content with images
-    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>");
-    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>");
 
-    // Create listener for range slider
-    document.querySelectorAll('.range-slider').forEach(function(){
-        
-        // Create input listener for slider
-        document.addEventListener("click", function(){
+            container.querySelectorAll('.step').forEach(function(step){
+                step.addEventListener("click", function(){
+                    var index = container.querySelector('.range-slider').value;
+                    
+                    // Increment or decrement depending on button clicked
+                    if (step.id == 'forward'){
+                        index++;
+                        // If past the last attribute, wrap around to first attribute
+                        index = index > 9 ? 0 : index;
+                    } else if (step.id == 'reverse'){
+                        index--;
+                        //If past the first attribute, wrap around to last attribute
+                        index = index < 0 ? 9 : index;
+                    };
+                    
+                    // Update slider
+                    container.querySelector('.range-slider').value = index;
+                    updatePropSymbols(attributes[index]);
+                })
+            })
 
-            // Get the index value
-            var index = document.querySelector('.range-slider').value;
-            
-            // Call function using defined index value
-            updatePropSymbols(attributes[index]);
-        });
-    });
-
-    // Creat listener for buttons
-    document.querySelectorAll('.step').forEach(function(step){
-
-        // Create input listener for button clicks
-        step.addEventListener("click", function(){
-
-            // Get the index value of the slider
-            var index = document.querySelector('.range-slider').value;
-            
-            // Increment or decrement depending on button clicked
-            if (step.id == 'forward'){
-                index++;
+                // Disable any mouse event listeners for the container
+                L.DomEvent.disableClickPropagation(container);
+                                
+                return container;
                 
-                // If past the last attribute, wrap around to first attribute
-                index = index > 9 ? 0 : index;
-            } else if (step.id == 'reverse'){
-                index--;
-                
-                // If past the first attribute, wrap around to last attribute
-                index = index < 0 ? 9 : index;
-            };
-            
-            // Update slider
-            document.querySelector('.range-slider').value = index;
-
-            // Call function using defined index value
-            updatePropSymbols(attributes[index]);
-            
-
+            }
         });
+
+        map.addControl(new SequenceControl());    // add listeners after adding control
+
+    
+    };
+
+function createLegend(attribute){
+    var LegendControl = L.Control.extend({
+        options: {
+            position: 'bottomright'
+        },
+
+
+        onAdd: function () {
+            // create the control container with a particular class name
+            var container = L.DomUtil.create('div', 'legend-control-container');
+
+            //PUT YOUR SCRIPT TO CREATE THE TEMPORAL LEGEND HERE
+            container.innerHTML = '<h2 class="temporalLegend">Median Income in <span class="year">2013</span></h2>';
+
+            //Step 1: start attribute legend svg string
+            var svg = '<svg id="attribute-legend" width="180px" height="130px">';
+
+            //array of circle names to base loop on  
+            var circles = ["max", "mean", "min"]; 
+
+            //Step 2: loop to add each circle and text to svg string  
+            for (var i=0; i<circles.length; i++){  
+
+                //Step 3: assign the r and cy attributes  
+                var radius = calcPropRadius(dataStats[circles[i]]);  
+                var cy = 50 - radius;  
+
+            //circle string  
+            svg += '<circle class="legend-circle" id="' + circles[i] + '" r="' + radius + '"cy="' + cy + '" fill="#21a81b" fill-opacity="0.8" stroke="#000000" cx="40"/>';  
+            ;  
+
+
+            //evenly space out labels            
+            var textY = i * 15 + 15;            
+
+            //text string            
+            svg += '<text id="' + circles[i] + '-text" x="75" y="' + textY + '">$ ' + Math.round(dataStats[circles[i]]*100)/100 + '</text>';
+        };
+
+        //close svg string
+        svg += "</svg>";
+
+
+        //add attribute legend svg to container
+        container.insertAdjacentHTML('beforeend',svg);
+
+            // //add attribute legend svg to container
+            // container.innerHTML += svg;
+
+            return container;
+        }
         
     });
-    
+    // console.log(attribute);
+    map.addControl(new LegendControl());
 };
 
 // Create function to process data
@@ -257,14 +342,20 @@ function getData(){
             var attributes = processData(json);
 
             // Calculate minimum data value
-            minValue = calculateMinValue(json);
+            // minValue = calculateMinValue(json);
+            minValue = calcStats(json)
             
             // Call function to create proportional symbols
             createPropSymbols(json, attributes);
 
             // Call funtion to access sequence controls passing in attributes
             createSequenceControls(attributes);
-        });
+
+            // Call function to create legend
+            createLegend(attributes);
+        })
+
 };
 
 document.addEventListener('DOMContentLoaded',createMap)
+

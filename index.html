@@ -8,27 +8,70 @@
         <!--put your external stylesheet links here-->
         <link rel="stylesheet" href="css/style.css">
         <link rel="stylesheet" href="lib/leaflet/leaflet.css"/>
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" type="text/css" />
+        
         <!-- [if IE<9]>
             <link rel="stylesheet" href="css/style.ie.css">
         <![endif] -->
         
         <!--you can also place internal styles here
         place these within <style> tags-->  
+            <style type='text/css'>
+                body {
+                  background-color: rgb(56, 55, 55);
+                }
+                h1 {
+                    color: rgb(42, 167, 26);
+                    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                    font-size: xx-large;
+                    text-align: center;
+                }
+
+                h2 {
+                    color: rgb(42, 167, 26);
+                    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                    font-size: large;
+                    text-align: center;
+                }
+
+                footer{
+                    color: rgb(14, 15, 14);
+                    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+                    font-size: small;
+                }
+
+                
+            </style>
+        <h1>Median Income by County/Independent City in Virginia: 2013-2022</h1>
+        <h2>Watch Virginia Median Income Grow!</h2>
         
     </head>
 
     <body>
         <!--put your initial page content here-->
         <div id="map"></div>
-        <div id="panel"></div>
+        <div id="lrs-slider"></div>
+        <!-- <div id="panel"></div> -->
         <!--you can also use this space for internal scripts;
         place these within <script> tags-->
-
+        <!-- <svg id="attribute_legend" width="180px" height="180px">
+            <circle fill="#F47821" fill-opacity="0.8" stroke="#000000" stroke-miterlimit="10" cx="90" cy="90.001" r="89.5"/>
+        </svg> -->
         <!--put your external script links here-->
         <script type="text/javascript" src="lib/leaflet/leaflet-src.js"></script>
         <!-- <script type="text/javascript" src="js/quickstartTutorial.js"></script> -->
         <!-- <script type="text/javascript" src="js/geojsonTutorial.js"></script> -->
-        <script type="text/javascript" src="js/adaptedTutorial.js"></script>
-        <!-- <script type="text/javascript" src="js/main.js"></script> -->
+        <!-- <script type="text/javascript" src="js/adaptedTutorial.js"></script> -->
+        <script type="text/javascript" src="js/main.js"></script>
+        
     </body>
+    <footer>
+        <p>Sources<br>
+            Median Household Income Data: https://data.virginia.gov/dataset/virginia-median-household-income-in-the-past-12-months-by-census-county-acs-5-year/resource/ae20704f-78dd-43ef-a3e4-33d5ea98a0b5<br>
+            Light BaseMap Tileset: https://tiles.stadiamaps.com/tiles/outdoors<br>
+            Dark BaseMap Tileset: https://tiles.stadiamaps.com/tiles/alidade_smooth_dark<br>
+            Leaflet Resources: https://leafletjs.com/<br>
+        </p>
+
+    </footer>
 </html>
