@@ -79,12 +79,11 @@ function calcStats(data){
         // console.log(dataStats.min)
         // dataStats.min = 39328
         dataStats.max = Math.max(...allValues);
-        console.log(dataStats.max)
+
         //calculate meanValue
         var sum = allValues.reduce(function(a, b){return a+b;});
-        console.log(sum)
         dataStats.mean = sum/ allValues.length;
-        console.log(dataStats.mean)
+
 
         return dataStats.min
 };
